@@ -16,6 +16,12 @@ export interface User {
   primaryCenterId?: string;
   status: 'active' | 'suspended' | 'pending';
   createdAt: string;
+  grade?: string; // e.g. Grade 11 / 2nd Secondary
+  educationSystem?: string; // e.g. Thanaweya Amma
+  subjects?: string[]; // For teachers e.g. ['Physics', 'Chemistry']
+  grades?: string[]; // For teachers who can teach more than 1 grade e.g. ['Grade 10', 'Grade 11', 'Grade 12']
+  bio?: string;
+  rating?: number;
 }
 
 export interface StudentProfile {

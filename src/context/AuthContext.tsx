@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Role } from '../types';
 import { authService } from '../services';
 import { DEMO_USERS } from '../services/mockData';
+import { storageService } from '../services/storageService';
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +11,8 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<void>;
   loginAsDemo: (demoRole: Role) => Promise<void>;
   switchRole: (newRole: Role) => void;
+  updateUser: (updates: Partial<User>) => void;
+  registerUser: (userData: Partial<User>) => void;
   logout: () => void;
   primaryCenterId: string;
 }
@@ -49,6 +52,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUser = (updates: Partial<User>) => {
+    if (!user) return;
+    const updated = { ...user, ...updates };
+    setUser(updated);
+    storageService.updateUser(user.id, updates);
+  };
+
+  const registerUser = (userData: Partial<User>) => {
+    const id = `user_${userData.role || 'student'}_${Date.now()}`;
+    const newUser: User = {
+      id,
+      name: userData.name || 'New User',
+      nameAr: userData.nameAr || userData.name || 'مستخدم جديد',
+      email: userData.email || `${id}@kayedu.demo`,
+      phone: userData.phone || '+20 100 000 0000',
+      role: userData.role || 'student',
+      avatarUrl: userData.avatarUrl || (userData.role === 'teacher'
+        ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80'
+        : 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&auto=format&fit=crop&q=80'),
+      primaryCenterId: userData.primaryCenterId || 'center_60',
+      centerIds: userData.centerIds || ['center_60', 'center_modern'],
+      grade: userData.grade || 'Grade 11',
+      educationSystem: userData.educationSystem || 'Thanaweya Amma',
+      subjects: userData.subjects || ['Physics'],
+      grades: userData.grades || ['Grade 10', 'Grade 11', 'Grade 12'],
+      bio: userData.bio || '',
+      rating: userData.rating || 4.8,
+      status: 'active',
+      createdAt: new Date().toISOString()
+    };
+    storageService.saveUser(newUser);
+    setUser(newUser);
+  };
+
   const logout = () => {
     authService.logout();
     setUser(null);
@@ -63,6 +100,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         loginAsDemo,
         switchRole,
+        updateUser,
+        registerUser,
         logout,
         primaryCenterId
       }}

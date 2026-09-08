@@ -50,25 +50,103 @@ class StorageService {
 
   // Users
   getUsers(): Record<string, User> {
-    return this.get('users', DEMO_USERS);
+    const users = this.get('users', DEMO_USERS);
+    if (!users.student?.grade || !users.student?.centerIds?.includes('center_60')) {
+      this.set('users', DEMO_USERS);
+      return DEMO_USERS;
+    }
+    return users;
+  }
+
+  saveUser(user: User): void {
+    const users = this.getUsers();
+    users[user.role] = user;
+    users[user.id] = user;
+    this.set('users', users);
+  }
+
+  updateUser(userId: string, updates: Partial<User>): User | undefined {
+    const users = this.getUsers();
+    // find user by id or by role key
+    for (const key of Object.keys(users)) {
+      if (users[key]?.id === userId || key === userId) {
+        users[key] = { ...users[key], ...updates };
+        this.set('users', users);
+        return users[key];
+      }
+    }
+    return undefined;
   }
 
   // Sessions
   getSessions(): Session[] {
-    return this.get('sessions', INITIAL_SESSIONS);
+    const sessions = this.get('sessions', INITIAL_SESSIONS);
+    if (!sessions.some(s => s.centerId === 'center_60' || s.id.includes('60'))) {
+      this.set('sessions', INITIAL_SESSIONS);
+      return INITIAL_SESSIONS;
+    }
+    return sessions;
   }
 
   saveSessions(sessions: Session[]): void {
     this.set('sessions', sessions);
   }
 
+  addSession(session: Session): void {
+    const sessions = this.getSessions();
+    this.set('sessions', [session, ...sessions]);
+  }
+
   // Enrollments
   getEnrollments(): StudentSessionEnrollment[] {
-    return this.get('enrollments', INITIAL_ENROLLMENTS);
+    const enrollments = this.get('enrollments', INITIAL_ENROLLMENTS);
+    if (!enrollments.some(e => e.id.includes('60') || e.sessionId.includes('60'))) {
+      this.set('enrollments', INITIAL_ENROLLMENTS);
+      return INITIAL_ENROLLMENTS;
+    }
+    return enrollments;
   }
 
   saveEnrollments(enrollments: StudentSessionEnrollment[]): void {
     this.set('enrollments', enrollments);
+  }
+
+  enrollStudent(
+    student: User,
+    sessionId: string,
+    paymentMethod: 'online_card' | 'digital_wallet' | 'center_cash' = 'center_cash'
+  ): StudentSessionEnrollment | null {
+    const sessions = this.getSessions();
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return null;
+
+    const enrollments = this.getEnrollments();
+    const existing = enrollments.find(e => e.sessionId === sessionId && e.studentId === student.id);
+    if (existing) {
+      return existing;
+    }
+
+    session.enrolledCount = (session.enrolledCount || 0) + 1;
+    this.saveSessions(sessions);
+
+    const isPaid = paymentMethod !== 'center_cash';
+    const newEnrollment: StudentSessionEnrollment = {
+      id: `enr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      sessionId,
+      studentId: student.id,
+      studentName: student.name,
+      studentCode: (student as any).studentCode || `ST-${Math.floor(100000 + Math.random() * 900000)}`,
+      studentAvatar: student.avatarUrl || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&auto=format&fit=crop&q=80',
+      paymentStatus: isPaid ? 'PAID' : 'PENDING',
+      paymentMethod,
+      paidAmount: isPaid ? session.priceEgp : undefined,
+      paidAt: isPaid ? new Date().toISOString().replace('T', ' ').substring(0, 16) : undefined,
+      receiptNumber: isPaid ? `REC-${session.centerId === 'center_60' ? '60' : 'MOD'}-${Date.now().toString().slice(-6)}` : undefined,
+      reservationStatus: 'CONFIRMED'
+    };
+
+    this.saveEnrollments([newEnrollment, ...enrollments]);
+    return newEnrollment;
   }
 
   updateEnrollment(id: string, updates: Partial<StudentSessionEnrollment>): StudentSessionEnrollment | undefined {
@@ -84,12 +162,22 @@ class StorageService {
 
   // Centers
   getCenters(): Center[] {
-    return this.get('centers', INITIAL_CENTERS);
+    const centers = this.get('centers', INITIAL_CENTERS);
+    if (!centers.some(c => c.id === 'center_60')) {
+      this.set('centers', INITIAL_CENTERS);
+      return INITIAL_CENTERS;
+    }
+    return centers;
   }
 
   // Teachers
   getTeachers() {
-    return this.get('teachers', INITIAL_TEACHERS);
+    const teachers = this.get('teachers', INITIAL_TEACHERS);
+    if (!teachers.some(t => t.userId === 'user_teacher_hesham' || t.centerIds.includes('center_60'))) {
+      this.set('teachers', INITIAL_TEACHERS);
+      return INITIAL_TEACHERS;
+    }
+    return teachers;
   }
 
   updateTeacherRating(teacherId: string, newScore: number) {
@@ -136,7 +224,12 @@ class StorageService {
 
   // Homework
   getHomework(): Homework[] {
-    return this.get('homework', INITIAL_HOMEWORK);
+    const homework = this.get('homework', INITIAL_HOMEWORK);
+    if (!homework.some(h => h.centerId === 'center_60' || h.id.includes('60'))) {
+      this.set('homework', INITIAL_HOMEWORK);
+      return INITIAL_HOMEWORK;
+    }
+    return homework;
   }
 
   addHomework(hw: Homework): void {
@@ -146,7 +239,12 @@ class StorageService {
 
   // Exams
   getExams(): Exam[] {
-    return this.get('exams', INITIAL_EXAMS);
+    const exams = this.get('exams', INITIAL_EXAMS);
+    if (!exams.some(e => e.centerId === 'center_60' || e.id.includes('60'))) {
+      this.set('exams', INITIAL_EXAMS);
+      return INITIAL_EXAMS;
+    }
+    return exams;
   }
 
   addExam(exam: Exam): void {

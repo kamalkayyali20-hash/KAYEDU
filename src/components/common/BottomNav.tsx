@@ -19,11 +19,23 @@ import {
 } from 'lucide-react';
 
 interface BottomNavProps {
-  currentTab: string;
-  onSelectTab: (tab: string) => void;
+  currentTab?: string;
+  activeTab?: string;
+  onSelectTab?: (tab: string) => void;
+  onTabChange?: (tab: string) => void;
 }
 
-export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onSelectTab }) => {
+export const BottomNav: React.FC<BottomNavProps> = ({
+  currentTab,
+  activeTab,
+  onSelectTab,
+  onTabChange,
+}) => {
+  const effectiveTab = activeTab || currentTab || 'home';
+  const handleTabClick = (tabId: string) => {
+    if (onTabChange) onTabChange(tabId);
+    if (onSelectTab) onSelectTab(tabId);
+  };
   const { role } = useAuth();
   const { t, language } = useLanguage();
 
@@ -101,13 +113,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onSelectTab })
       <div className="max-w-md md:max-w-xl mx-auto flex items-center justify-around px-2 py-1.5">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = currentTab === item.id;
+          const isActive = effectiveTab === item.id;
 
           if (item.highlight) {
             return (
               <button
                 key={item.id}
-                onClick={() => onSelectTab(item.id)}
+                onClick={() => handleTabClick(item.id)}
                 className="flex flex-col items-center justify-center -mt-5 group focus:outline-none"
               >
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:scale-105 group-active:scale-95 transition-all">
@@ -123,7 +135,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onSelectTab })
           return (
             <button
               key={item.id}
-              onClick={() => onSelectTab(item.id)}
+              onClick={() => handleTabClick(item.id)}
               className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all ${
                 isActive
                   ? 'text-indigo-600 dark:text-indigo-400 font-bold'

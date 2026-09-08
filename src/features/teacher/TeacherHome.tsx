@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { AIAssistantModal } from './AIAssistantModal';
 import { CreateHomeworkModal } from './CreateHomeworkModal';
+import { CreateSessionModal } from './CreateSessionModal';
 
 interface TeacherHomeProps {
   onNavigateTab: (tab: string) => void;
@@ -32,6 +33,8 @@ export const TeacherHome: React.FC<TeacherHomeProps> = ({ onNavigateTab, onOpenS
   const { user } = useAuth();
   const { t, language } = useLanguage();
 
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const sessions = storageService.getSessions().filter(s => s.teacherId === (user?.id || 'user_teacher_1'));
   const allSessions = storageService.getSessions();
   const enrollments = storageService.getEnrollments();
@@ -39,6 +42,7 @@ export const TeacherHome: React.FC<TeacherHomeProps> = ({ onNavigateTab, onOpenS
 
   const [showAIModal, setShowAIModal] = useState(false);
   const [showCreateHwModal, setShowCreateHwModal] = useState(false);
+  const [showCreateSessionModal, setShowCreateSessionModal] = useState(false);
   const [activeRosterSession, setActiveRosterSession] = useState<Session | null>(null);
 
   // Total students today across all centers
@@ -61,8 +65,16 @@ export const TeacherHome: React.FC<TeacherHomeProps> = ({ onNavigateTab, onOpenS
               : 'Senior Physics Specialist • 3 Connected Educational Centers'}
           </p>
         </div>
-        <div className="text-end">
-          <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowCreateSessionModal(true)}
+            className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/20 flex items-center gap-1.5 transition-all"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>{language === 'ar' ? 'إضافة حصة / مجموعة' : 'Add Class / Session'}</span>
+          </button>
+          <span className="hidden sm:inline text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
             {t('verifiedTeacher')}
           </span>
         </div>
@@ -140,13 +152,22 @@ export const TeacherHome: React.FC<TeacherHomeProps> = ({ onNavigateTab, onOpenS
             <Calendar className="w-4 h-4 text-indigo-600" />
             {t('todaysSchedule')}
           </h3>
-          <button
-            onClick={() => setShowCreateHwModal(true)}
-            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>{language === 'ar' ? 'إنشاء واجب' : 'New Homework'}</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowCreateSessionModal(true)}
+              className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>{language === 'ar' ? 'إضافة حصة' : '+ Add Class'}</span>
+            </button>
+            <button
+              onClick={() => setShowCreateHwModal(true)}
+              className="text-xs font-bold text-slate-500 hover:text-indigo-600 hover:underline flex items-center gap-1"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>{language === 'ar' ? 'إنشاء واجب' : 'New Homework'}</span>
+            </button>
+          </div>
         </div>
 
         <div className="space-y-2.5">
@@ -291,6 +312,15 @@ export const TeacherHome: React.FC<TeacherHomeProps> = ({ onNavigateTab, onOpenS
         <CreateHomeworkModal
           onClose={() => setShowCreateHwModal(false)}
           onPublished={() => setShowCreateHwModal(false)}
+        />
+      )}
+
+      {/* Create Class / Session Modal */}
+      {showCreateSessionModal && (
+        <CreateSessionModal
+          isOpen={showCreateSessionModal}
+          onClose={() => setShowCreateSessionModal(false)}
+          onSessionCreated={() => setRefreshKey(k => k + 1)}
         />
       )}
     </div>

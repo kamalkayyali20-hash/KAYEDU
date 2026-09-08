@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export const LoginView: React.FC = () => {
-  const { login, loginAsDemo } = useAuth();
+  const { login, loginAsDemo, registerUser } = useAuth();
   const { t, language, toggleLanguage } = useLanguage();
 
   const [emailOrPhone, setEmailOrPhone] = useState('student@kayedu.demo');
@@ -41,6 +41,9 @@ export const LoginView: React.FC = () => {
     email: '',
     grade: 'Grade 11',
     system: 'Thanaweya Amma',
+    subject: 'Physics',
+    grades: ['Grade 10', 'Grade 11', 'Grade 12'],
+    centerId: 'center_60',
     otp: ''
   });
 
@@ -324,25 +327,120 @@ export const LoginView: React.FC = () => {
 
             {registerStep === 2 && (
               <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="First Name"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                />
-                <input
-                  type="text"
-                  placeholder="Last Name"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={registerForm.firstName}
+                    onChange={e => setRegisterForm({ ...registerForm, firstName: e.target.value })}
+                    placeholder="First Name"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
+                  />
+                  <input
+                    type="text"
+                    value={registerForm.lastName}
+                    onChange={e => setRegisterForm({ ...registerForm, lastName: e.target.value })}
+                    placeholder="Last Name"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
+                  />
+                </div>
                 <input
                   type="tel"
-                  placeholder="Phone (+20 ...)"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                  value={registerForm.phone}
+                  onChange={e => setRegisterForm({ ...registerForm, phone: e.target.value })}
+                  placeholder="Phone (+20 100 ...)"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-mono"
                 />
+
+                {/* STUDENT: "in the regester to write which grade i am with" */}
+                {registerRole === 'student' && (
+                  <div className="space-y-2 p-2.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900">
+                    <label className="block text-[11px] font-bold text-indigo-900 dark:text-indigo-300">
+                      {language === 'ar' ? 'حدد الصف الدراسي (إلزامي):' : 'Select Which Grade You Are In:'}
+                    </label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {['Grade 10', 'Grade 11', 'Grade 12'].map(grd => (
+                        <button
+                          key={grd}
+                          type="button"
+                          onClick={() => setRegisterForm({ ...registerForm, grade: grd })}
+                          className={`py-1.5 px-2 rounded-lg text-xs font-bold border transition-all ${
+                            registerForm.grade === grd
+                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          {grd}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="pt-1">
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Center Affiliation:</label>
+                      <select
+                        value={registerForm.centerId}
+                        onChange={e => setRegisterForm({ ...registerForm, centerId: e.target.value })}
+                        className="w-full px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                      >
+                        <option value="center_60">Center 60 (سنتر 60 - مدينة نصر)</option>
+                        <option value="center_modern">Center Modern (سنتر مودرن - المهندسين)</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* TEACHER: "for teacher to be which subject and which grades bec as a teacher i can teach more than 1 grade" */}
+                {registerRole === 'teacher' && (
+                  <div className="space-y-2 p-2.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900">
+                    <label className="block text-[11px] font-bold text-emerald-900 dark:text-emerald-300">
+                      {language === 'ar' ? 'المادة التي تدرسها:' : 'Teaching Subject:'}
+                    </label>
+                    <select
+                      value={registerForm.subject}
+                      onChange={e => setRegisterForm({ ...registerForm, subject: e.target.value })}
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
+                    >
+                      <option value="Physics">Physics (فيزياء)</option>
+                      <option value="Chemistry">Chemistry (كيمياء)</option>
+                      <option value="Mathematics">Mathematics (رياضيات)</option>
+                      <option value="Biology">Biology (أحياء)</option>
+                      <option value="English Language">English (لغة إنجليزية)</option>
+                      <option value="Arabic Language">Arabic (لغة عربية)</option>
+                    </select>
+
+                    <label className="block text-[11px] font-bold text-emerald-900 dark:text-emerald-300 pt-1">
+                      {language === 'ar' ? 'الصفوف الدراسية (يمكنك تدريس أكثر من صف):' : 'Grades Taught (Teacher can teach multi-grades):'}
+                    </label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {['Grade 10', 'Grade 11', 'Grade 12'].map(grd => {
+                        const isSelected = registerForm.grades.includes(grd);
+                        return (
+                          <button
+                            key={grd}
+                            type="button"
+                            onClick={() => {
+                              const nextGrades = isSelected
+                                ? (registerForm.grades.length > 1 ? registerForm.grades.filter(g => g !== grd) : registerForm.grades)
+                                : [...registerForm.grades, grd];
+                              setRegisterForm({ ...registerForm, grades: nextGrades });
+                            }}
+                            className={`py-1.5 px-2 rounded-lg text-xs font-bold border transition-all ${
+                              isSelected
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                            }`}
+                          >
+                            {grd} {isSelected ? '✓' : ''}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <button
                   type="button"
                   onClick={() => setRegisterStep(3)}
-                  className="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold"
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-md"
                 >
                   Continue
                 </button>
@@ -386,9 +484,20 @@ export const LoginView: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setShowRegisterModal(false);
-                    handleDemoClick(registerRole);
+                    registerUser({
+                      name: `${registerForm.firstName} ${registerForm.lastName}`.trim() || (registerRole === 'student' ? 'Ahmed Mohamed' : 'Mr. Ahmed Hassan'),
+                      phone: registerForm.phone || '+20 100 123 4567',
+                      role: registerRole,
+                      grade: registerForm.grade,
+                      educationSystem: registerForm.system,
+                      subjects: [registerForm.subject],
+                      grades: registerForm.grades,
+                      primaryCenterId: registerForm.centerId,
+                      centerIds: ['center_60', 'center_modern'],
+                      rating: 4.8
+                    });
                   }}
-                  className="w-full py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-md"
+                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md"
                 >
                   Verify & Open KAYEDU
                 </button>

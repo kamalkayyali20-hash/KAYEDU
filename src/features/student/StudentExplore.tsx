@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { teacherService, reservationService, sessionService } from '../../services';
@@ -29,8 +29,14 @@ export const StudentExplore: React.FC = () => {
 
   const [query, setQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>('Physics');
-  const [selectedGrade, setSelectedGrade] = useState<string>('Grade 11');
+  const [selectedGrade, setSelectedGrade] = useState<string>(user?.grade || 'Grade 10');
   const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user?.grade) {
+      setSelectedGrade(user.grade);
+    }
+  }, [user?.grade]);
 
   // Reservation dialog
   const [selectedGroupSession, setSelectedGroupSession] = useState<Session | null>(null);
@@ -51,6 +57,7 @@ export const StudentExplore: React.FC = () => {
   const handleReserve = (session: Session) => {
     try {
       const res = reservationService.reserveSeat(session.id, user!);
+      storageService.enrollStudent(user!, session.id, 'center_cash');
       setReservationResult({ status: res.status, message: res.message });
       setSelectedGroupSession(session);
     } catch (err: any) {
@@ -166,7 +173,7 @@ export const StudentExplore: React.FC = () => {
                     </h3>
                     <div className="flex items-center gap-1 text-amber-500 text-xs font-bold shrink-0">
                       <Star className="w-3.5 h-3.5 fill-amber-500" />
-                      <span>{teacher.rating}</span>
+                      <span>{teacher.rating.toFixed(1)}</span>
                     </div>
                   </div>
 
@@ -199,9 +206,10 @@ export const StudentExplore: React.FC = () => {
             </div>
 
             <div className="mt-4 flex items-center justify-between">
-              <span className="text-[11px] text-slate-400">
-                {teacher.ratingCount} verified ratings
-              </span>
+              <div className="flex items-center gap-1 text-amber-500 text-xs font-extrabold bg-amber-50 dark:bg-amber-950/40 px-2 py-1 rounded-lg border border-amber-200/60 dark:border-amber-900/50">
+                <Star className="w-3.5 h-3.5 fill-amber-500" />
+                <span>{teacher.rating.toFixed(1)}</span>
+              </div>
               <button
                 type="button"
                 className="px-3.5 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition-colors flex items-center gap-1 shadow-sm"
@@ -250,12 +258,12 @@ export const StudentExplore: React.FC = () => {
               </button>
             </div>
 
-            {/* Ratings Breakdown Card (Section 19: 4.74 / 5, 75% 5-star, etc.) */}
+            {/* Ratings Card (Shows star score like 4.7 / 5.0, hides raw vote count) */}
             <div className="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-900/50">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-black text-slate-900 dark:text-white font-mono">
-                    {selectedTeacher.rating}
+                    {selectedTeacher.rating.toFixed(1)}
                   </span>
                   <span className="text-xs text-slate-500">/ 5.0</span>
                   <div className="flex text-amber-500">
@@ -264,8 +272,9 @@ export const StudentExplore: React.FC = () => {
                     ))}
                   </div>
                 </div>
-                <span className="text-xs text-slate-500 font-semibold">
-                  {selectedTeacher.ratingCount} verified student ratings
+                <span className="text-xs text-amber-700 dark:text-amber-400 font-bold flex items-center gap-1 bg-amber-100/80 dark:bg-amber-900/40 px-2.5 py-1 rounded-full">
+                  <Star className="w-3 h-3 fill-amber-500" />
+                  {selectedTeacher.rating >= 4.8 ? 'Top Ranked Educator' : 'Highly Recommended'}
                 </span>
               </div>
 

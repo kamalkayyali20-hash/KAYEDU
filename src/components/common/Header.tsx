@@ -21,9 +21,17 @@ interface HeaderProps {
   title?: string;
   subtitle?: string;
   onOpenNotifications?: () => void;
+  onOpenAuthModal?: () => void;
+  onNavigateProfile?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ title, subtitle, onOpenNotifications }) => {
+export const Header: React.FC<HeaderProps> = ({
+  title,
+  subtitle,
+  onOpenNotifications,
+  onOpenAuthModal,
+  onNavigateProfile
+}) => {
   const { user, role, switchRole, logout } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
   const { isDark, toggleTheme } = useTheme();
@@ -160,15 +168,19 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, onOpenNotificat
 
           {/* User Profile Avatar */}
           {user && (
-            <div className="relative group">
+            <button
+              type="button"
+              onClick={onOpenAuthModal || onNavigateProfile}
+              className="relative group focus:outline-none"
+              title={language === 'ar' ? `${user.name} - اضغط لتسجيل الدخول أو إنشاء حساب` : `${user.name} - Click for Login / Register form`}
+            >
               <img
                 src={user.avatarUrl}
                 alt={user.name}
                 referrerPolicy="no-referrer"
-                className="w-8 h-8 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-700 cursor-pointer"
-                title={`${user.name} (${role})`}
+                className="w-8 h-8 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-700 cursor-pointer group-hover:ring-indigo-500 transition-all"
               />
-            </div>
+            </button>
           )}
         </div>
       </div>
