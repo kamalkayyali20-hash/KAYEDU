@@ -1,0 +1,11 @@
+{
+  "name": "KAYEDU",
+  "description": "A connected education platform for centers, teachers, students and parents by KAY-SOFT.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
+
